@@ -9,13 +9,14 @@
 
 #include "Secondary2019Code.h"
 #include "params.h"
-#include "odometry.h"
+#include "posEstimator.h"
 #include "motorControl.h"
 #include "math.h"
 
 Navigator navigator = Navigator();
 
-Navigator::Navigator(){
+Navigator::Navigator()
+{
 	turn_done = false;
 	displacement_done = false;
 	trajectory_done = false;
@@ -26,7 +27,8 @@ Navigator::Navigator(){
 	move_state = STOPPED;
 }
 
-void Navigator::move_to(float x, float y){
+void Navigator::move_to(float x, float y)
+{
 	x_target = x;
 	y_target = y;
 	move_type = DISPLACEMENT;
@@ -38,11 +40,12 @@ void Navigator::move_to(float x, float y){
 	Serial.println(y_target);
 }
 
-void Navigator::turn_to(float theta){ // En degrés
-	theta_target = center_radian(PI*theta/180);
+void Navigator::turn_to(float theta)
+{ // En degrés
+	theta_target = center_radian(PI * theta / 180);
 
 	/*Serial.print("Angle: ");
-	Serial.println(Odometry::get_pos_theta());
+	Serial.println(PosEstimator::get_pos_theta());
 	Serial.print("moving_to : ");
 	Serial.print(theta_target);
 	Serial.print(" ( <  ");
@@ -53,7 +56,8 @@ void Navigator::turn_to(float theta){ // En degrés
 	trajectory_done = false;
 }
 
-void Navigator::throw_to(float x, float y, float theta){
+void Navigator::throw_to(float x, float y, float theta)
+{
 	x_target = x;
 	y_target = y;
 	theta_target = theta;
@@ -69,79 +73,92 @@ void Navigator::throw_to(float x, float y, float theta){
 float Navigator::compute_cons_speed()
 {
 	float speed_cons, dist_fore, t_stop, dist_objective;
-	int sgn,MAX_ACCEL;
+	int sgn, MAX_ACCEL;
 
-	if(move_type == THROW){
+	if (move_type == THROW)
+	{
 		MAX_ACCEL = ACCEL_MAX_THROW;
 	}
-	else{
+	else
+	{
 		MAX_ACCEL = ACCEL_MAX;
 	}
-	sgn = scalaire(cos(Odometry::get_pos_theta()),sin(Odometry::get_pos_theta()),x_target - Odometry::get_pos_x(),y_target - Odometry::get_pos_y());
+	sgn = scalaire(cos(PosEstimator::get_pos_theta()), sin(PosEstimator::get_pos_theta()), x_target - PosEstimator::get_pos_x(), y_target - PosEstimator::get_pos_y());
 
 	/*Serial.print("Sens d'avancée:");
 	Serial.print("\t");
 	Serial.println(sgn);*/
 
 	//Test de décélération (on suppose l'accélération minimale et on intègre deux fois)
-	t_stop = Odometry::get_speed()/MAX_ACCEL;
-	dist_fore = (Odometry::get_speed()*t_stop-1/2*MAX_ACCEL*pow(t_stop,2));
-	/*dist_fore = Odometry::get_speed()*t_stop;*/
+	t_stop = PosEstimator::get_speed() / MAX_ACCEL;
+	dist_fore = (PosEstimator::get_speed() * t_stop - 1 / 2 * MAX_ACCEL * pow(t_stop, 2));
+	/*dist_fore = PosEstimator::get_speed()*t_stop;*/
 
-	dist_objective = sqrt(pow(x_target - Odometry::get_pos_x(),2) + pow(y_target - Odometry::get_pos_y(),2));
+	dist_objective = sqrt(pow(x_target - PosEstimator::get_pos_x(), 2) + pow(y_target - PosEstimator::get_pos_y(), 2));
 
 	//Si le point estimé est suffisamment proche du point voulu, on décélére, sinon on accélére jusqu'à la vitesse maximale.
-	if(abs( dist_fore - dist_objective ) < ADMITTED_POSITION_ERROR){
-		speed_cons = sgn*max(0,-MAX_ACCEL*NAVIGATOR_TIME_PERIOD + abs(Odometry::get_speed()));
+	if (abs(dist_fore - dist_objective) < ADMITTED_POSITION_ERROR)
+	{
+		speed_cons = sgn * max(0, -MAX_ACCEL * NAVIGATOR_TIME_PERIOD + abs(PosEstimator::get_speed()));
 	}
-	else{
-		if(dist_fore - dist_objective > 0){
-			speed_cons = sgn*max(0,abs(Odometry::get_speed()) - MAX_ACCEL*NAVIGATOR_TIME_PERIOD);
+	else
+	{
+		if (dist_fore - dist_objective > 0)
+		{
+			speed_cons = sgn * max(0, abs(PosEstimator::get_speed()) - MAX_ACCEL * NAVIGATOR_TIME_PERIOD);
 		}
-		else{
-			speed_cons = sgn*min(SPEED_MAX,abs(Odometry::get_speed()) + MAX_ACCEL*NAVIGATOR_TIME_PERIOD);
+		else
+		{
+			speed_cons = sgn * min(SPEED_MAX, abs(PosEstimator::get_speed()) + MAX_ACCEL * NAVIGATOR_TIME_PERIOD);
 		}
 	}
-/*	Serial.print("Distances estimées");
+	/*	Serial.print("Distances estimées");
 	Serial.print("\t");
 	Serial.print(dist_fore - dist_objective);
 	Serial.print("\t");
 	Serial.print(dist_objective);
 	Serial.print("\tspeed= ");
-	Serial.println(Odometry::get_speed());*/
+	Serial.println(PosEstimator::get_speed());*/
 	return speed_cons;
 }
-
 
 float Navigator::compute_cons_omega()
 {
 	float omega_cons, angle_fore, alpha, t_rotation_stop;
 	int sgn;
 
-	if(move_type == DISPLACEMENT){
-		alpha = Odometry::get_pos_theta() + center_axes(atan2((-y_target+Odometry::get_pos_y()),(-x_target+Odometry::get_pos_x())) - Odometry::get_pos_theta());
+	if (move_type == DISPLACEMENT)
+	{
+		alpha = PosEstimator::get_pos_theta() + center_axes(atan2((-y_target + PosEstimator::get_pos_y()), (-x_target + PosEstimator::get_pos_x())) - PosEstimator::get_pos_theta());
 	}
-	else{
+	else
+	{
 		alpha = theta_target;
 	}
 
-	if (center_radian(alpha - Odometry::get_pos_theta()) > 0){
+	if (center_radian(alpha - PosEstimator::get_pos_theta()) > 0)
+	{
 		sgn = 1;
 	}
-	else{
+	else
+	{
 		sgn = -1;
 	}
-	t_rotation_stop = abs(Odometry::get_omega())/ACCEL_OMEGA_MAX;
-	angle_fore = center_radian(Odometry::get_pos_theta() + sgn*(abs(Odometry::get_omega())*t_rotation_stop -1/2*ACCEL_OMEGA_MAX*pow(t_rotation_stop,2)));
-	if(abs(center_radian(angle_fore - alpha)) < ADMITTED_ANGLE_ERROR){
-		omega_cons = sgn*max(0,abs(Odometry::get_omega()) - NAVIGATOR_TIME_PERIOD*ACCEL_OMEGA_MAX);
+	t_rotation_stop = abs(PosEstimator::get_omega()) / ACCEL_OMEGA_MAX;
+	angle_fore = center_radian(PosEstimator::get_pos_theta() + sgn * (abs(PosEstimator::get_omega()) * t_rotation_stop - 1 / 2 * ACCEL_OMEGA_MAX * pow(t_rotation_stop, 2)));
+	if (abs(center_radian(angle_fore - alpha)) < ADMITTED_ANGLE_ERROR)
+	{
+		omega_cons = sgn * max(0, abs(PosEstimator::get_omega()) - NAVIGATOR_TIME_PERIOD * ACCEL_OMEGA_MAX);
 	}
-	else{
-		if(sgn*(center_radian(alpha - angle_fore)) > 0){
-			omega_cons = sgn*min(OMEGA_MAX, NAVIGATOR_TIME_PERIOD*ACCEL_OMEGA_MAX + abs(Odometry::get_omega()));
+	else
+	{
+		if (sgn * (center_radian(alpha - angle_fore)) > 0)
+		{
+			omega_cons = sgn * min(OMEGA_MAX, NAVIGATOR_TIME_PERIOD * ACCEL_OMEGA_MAX + abs(PosEstimator::get_omega()));
 		}
-		else{
-			omega_cons = sgn*max(0,abs(Odometry::get_omega()) - NAVIGATOR_TIME_PERIOD*ACCEL_OMEGA_MAX);
+		else
+		{
+			omega_cons = sgn * max(0, abs(PosEstimator::get_omega()) - NAVIGATOR_TIME_PERIOD * ACCEL_OMEGA_MAX);
 		}
 	}
 	/*Serial.print("Consigne angle:");
@@ -156,33 +173,42 @@ float Navigator::compute_cons_omega()
 	return omega_cons;
 }
 
-void Navigator::update(){
-	float omega_cons,speed_cons,alpha,distance;
+void Navigator::update()
+{
+	float omega_cons, speed_cons, alpha, distance;
 
-	if(move_type == BRAKE){
-		int sgn = scalaire(cos(Odometry::get_pos_theta()),sin(Odometry::get_pos_theta()),x_target - Odometry::get_pos_x(),y_target - Odometry::get_pos_y());
-		speed_cons = sgn*max(0,abs(Odometry::get_speed()) - EMERGENCY_BRAKE*NAVIGATOR_TIME_PERIOD);
-		if(abs(Odometry::get_speed()) < ADMITTED_SPEED_ERROR){
+	if (move_type == BRAKE)
+	{
+		int sgn = scalaire(cos(PosEstimator::get_pos_theta()), sin(PosEstimator::get_pos_theta()), x_target - PosEstimator::get_pos_x(), y_target - PosEstimator::get_pos_y());
+		speed_cons = sgn * max(0, abs(PosEstimator::get_speed()) - EMERGENCY_BRAKE * NAVIGATOR_TIME_PERIOD);
+		if (abs(PosEstimator::get_speed()) < ADMITTED_SPEED_ERROR)
+		{
 			move_state = STOPPED;
 			speed_cons = 0;
 		}
-		MotorControl::set_cons(speed_cons,0);
+		MotorControl::set_cons(speed_cons, 0);
 	}
-	else{
-		switch(move_state){
+	else
+	{
+		switch (move_state)
+		{
 		case INITIAL_TURN:
-			if(move_type==DISPLACEMENT){
-				alpha = Odometry::get_pos_theta() + center_axes(atan2((-y_target+Odometry::get_pos_y()),(-x_target+Odometry::get_pos_x())) - Odometry::get_pos_theta());
+			if (move_type == DISPLACEMENT)
+			{
+				alpha = PosEstimator::get_pos_theta() + center_axes(atan2((-y_target + PosEstimator::get_pos_y()), (-x_target + PosEstimator::get_pos_x())) - PosEstimator::get_pos_theta());
 			}
-			else{
+			else
+			{
 				alpha = theta_target;
 			}
-			turn_done = ((abs(center_radian(Odometry::get_pos_theta() - alpha)) < ADMITTED_ANGLE_ERROR)&&(Odometry::get_omega() < ADMITTED_OMEGA_ERROR));
+			turn_done = ((abs(center_radian(PosEstimator::get_pos_theta() - alpha)) < ADMITTED_ANGLE_ERROR) && (PosEstimator::get_omega() < ADMITTED_OMEGA_ERROR));
 
-			if(turn_done){
+			if (turn_done)
+			{
 
-				MotorControl::set_cons(0,0);
-				switch(move_type){
+				MotorControl::set_cons(0, 0);
+				switch (move_type)
+				{
 				case TURN:
 					move_state = STOPPED;
 					trajectory_done = true;
@@ -201,23 +227,24 @@ void Navigator::update(){
 			}
 
 			omega_cons = compute_cons_omega();
-			MotorControl::set_cons(0,omega_cons);
+			MotorControl::set_cons(0, omega_cons);
 
-			MotorControl::set_cons(0,omega_cons);
+			MotorControl::set_cons(0, omega_cons);
 
 			break;
 		case CRUISE:
-			distance = sqrt(pow(x_target - Odometry::get_pos_x(),2) + pow(y_target - Odometry::get_pos_y(),2));
-			displacement_done = ((distance<ADMITTED_POSITION_ERROR)&&(Odometry::get_speed() < ADMITTED_SPEED_ERROR));
-			if(displacement_done){
-				MotorControl::set_cons(0,0);
-				move_state=STOPPED;
+			distance = sqrt(pow(x_target - PosEstimator::get_pos_x(), 2) + pow(y_target - PosEstimator::get_pos_y(), 2));
+			displacement_done = ((distance < ADMITTED_POSITION_ERROR) && (PosEstimator::get_speed() < ADMITTED_SPEED_ERROR));
+			if (displacement_done)
+			{
+				MotorControl::set_cons(0, 0);
+				move_state = STOPPED;
 				trajectory_done = true;
 				break;
 			}
-			speed_cons=compute_cons_speed();
+			speed_cons = compute_cons_speed();
 			omega_cons = compute_cons_omega();
-			MotorControl::set_cons(speed_cons,omega_cons);
+			MotorControl::set_cons(speed_cons, omega_cons);
 			break;
 		case STOPPED:
 			//do nothing
@@ -226,20 +253,23 @@ void Navigator::update(){
 	}
 }
 
-void Navigator::forceStop(){
+void Navigator::forceStop()
+{
 	move_type = BRAKE;
 }
 
-bool Navigator::moveForward(){
-	int dir = scalaire(cos(Odometry::get_pos_theta()),sin(Odometry::get_pos_theta()),x_target - Odometry::get_pos_x(),y_target - Odometry::get_pos_y());
-	if(dir>0){
+bool Navigator::moveForward()
+{
+	int dir = scalaire(cos(PosEstimator::get_pos_theta()), sin(PosEstimator::get_pos_theta()), x_target - PosEstimator::get_pos_x(), y_target - PosEstimator::get_pos_y());
+	if (dir > 0)
+	{
 		return true;
 	}
-	else{
+	else
+	{
 		return false;
 	}
 }
-
 
 float Navigator::center_axes(float angle)
 {
@@ -247,23 +277,30 @@ float Navigator::center_axes(float angle)
 		Serial.print("\t");
 		Serial.print(angle);
 		Serial.print("\t");*/
-	if (abs(angle) > PI){
-		if(angle<0){
-			while(abs(angle)>PI){
-				angle+=PI*2;
+	if (abs(angle) > PI)
+	{
+		if (angle < 0)
+		{
+			while (abs(angle) > PI)
+			{
+				angle += PI * 2;
 			}
 		}
-		else{
-			while(abs(angle)>PI){
-				angle-=2*PI;
+		else
+		{
+			while (abs(angle) > PI)
+			{
+				angle -= 2 * PI;
 			}
 		}
 	}
-	if(abs(angle+PI) + ADMITTED_ANGLE_ERROR < abs(angle)){
-		angle+=PI;
+	if (abs(angle + PI) + ADMITTED_ANGLE_ERROR < abs(angle))
+	{
+		angle += PI;
 	}
-	if(abs(angle-PI) + ADMITTED_ANGLE_ERROR< abs(angle)){
-		angle-=PI;
+	if (abs(angle - PI) + ADMITTED_ANGLE_ERROR < abs(angle))
+	{
+		angle -= PI;
 	}
 	/*Serial.println(angle);*/
 	return angle;
@@ -271,31 +308,39 @@ float Navigator::center_axes(float angle)
 
 float Navigator::center_radian(float angle)
 {
-	if (abs(angle) > PI){
-		if(angle<0){
-			while(abs(angle)>PI){
-				angle+=PI*2;
+	if (abs(angle) > PI)
+	{
+		if (angle < 0)
+		{
+			while (abs(angle) > PI)
+			{
+				angle += PI * 2;
 			}
 		}
-		else{
-			while(abs(angle)>PI){
-				angle-=2*PI;
+		else
+		{
+			while (abs(angle) > PI)
+			{
+				angle -= 2 * PI;
 			}
 		}
 	}
 	return angle;
 }
 
-
-int Navigator::scalaire(float x,float y,float x2,float y2){
-	if(x*x2 + y*y2>0){
+int Navigator::scalaire(float x, float y, float x2, float y2)
+{
+	if (x * x2 + y * y2 > 0)
+	{
 		return 1;
 	}
-	else{
+	else
+	{
 		return -1;
 	}
 }
 
-bool Navigator::isTrajectoryFinished(){
+bool Navigator::isTrajectoryFinished()
+{
 	return trajectory_done;
 }

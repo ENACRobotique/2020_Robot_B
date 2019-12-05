@@ -13,6 +13,8 @@ namespace PosEstimator
 void isr1();
 void isr2();
 
+void initialize_mpu6050();
+
 void update();
 void init();
 

@@ -30,7 +30,10 @@ void setup()
 
 	Serial1.begin(115200);
 	Serial2.begin(115200);
-	//  while(!Serial){}
+	Serial1.print("Init");
+	// while (!Serial)
+	{
+	}
 	Serial1.println("INIT Serial");
 	Serial1.println(BATT_CHARGE);
 	PosEstimator::init();
@@ -69,7 +72,6 @@ void loop()
 	// }
 	if (testAsserv.check())
 	{
-
 		if (j == 0 && !move_asked)
 		{
 			navigator.move_to(400, 0);

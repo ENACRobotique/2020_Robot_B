@@ -6,6 +6,7 @@
  */
 #ifndef LIDARXV11_H_
 #define LIDARXV11_H_
+#include "Arduino.h"
 
 enum State {
 	WAIT_START,

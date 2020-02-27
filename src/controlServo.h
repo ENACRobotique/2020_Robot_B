@@ -10,8 +10,11 @@ public:
     ControlServo();
     virtual ~ControlServo();
     void init(int ServoPIN);
-    void moveServo(int angle);
+    void moveServo(int angle); //input a delta angle
+    void resetPos();
     PWMServo servo;
+private:
+    int init_angle = servo.read();
 };
 
 #endif

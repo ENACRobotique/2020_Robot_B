@@ -21,21 +21,24 @@ uint32_t deb;
 //The setup function is called once at startup of the sketch
 void setup()
 {
+
 	delay(1000);
 	pinMode(PIN_LED, OUTPUT);
 	pinMode(MOT_LIDAR, OUTPUT);
+	digitalWrite(PIN_LED,HIGH);
 
 	pinMode(COLOR, INPUT_PULLUP);
 	pinMode(BATT_CHARGE, INPUT);
 
 	Serial1.begin(115200);
 	Serial2.begin(115200);
-	Serial1.print("Init");
+	Serial.begin(115200);
+	Serial.print("Init");
 	// while (!Serial)
 	{
 	}
-	Serial1.println("INIT Serial");
-	Serial1.println(BATT_CHARGE);
+	Serial.println("INIT Serial");
+	Serial.println(BATT_CHARGE);
 	PosEstimator::init();
 	MotorControl::init();
 	controlTime.reset();
@@ -45,6 +48,8 @@ void setup()
 	PosEstimator::set_pos(0, 0, 0);
 
 	//MotorControl::set_cons(100,0);
+
+	
 }
 
 int i = 0;
@@ -54,9 +59,10 @@ bool move_asked = false;
 // The loop function is called in an endless loop
 void loop()
 {
-
+	
 	if (controlTime.check())
 	{
+		Serial.println(Serial2.read());
 		PosEstimator ::update();
 		MotorControl::update();
 	}

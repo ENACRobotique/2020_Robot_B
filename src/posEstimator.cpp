@@ -146,11 +146,11 @@ void update()
 	speed = length / CONTROL_PERIOD;
 	omega = angle / CONTROL_PERIOD;
 
-	Serial.print(pos_x);
-	Serial.print("\t");
-	Serial.print(pos_y);
-	Serial.print("\t");
-	Serial.println(pos_theta);
+	//Serial.print(pos_x);
+	//Serial.print("\t");
+	//Serial.print(pos_y);
+	//Serial.print("\t");
+	//Serial.println(pos_theta);
 	//Serial.print("\t");
 	// Serial.print(speed);
 	// Serial.print("\t");

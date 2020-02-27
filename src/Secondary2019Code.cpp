@@ -62,7 +62,7 @@ void loop()
 	
 	if (controlTime.check())
 	{
-		Serial.println(Serial2.read());
+		Serial.println(Serial2.readString());
 		PosEstimator ::update();
 		MotorControl::update();
 	}

@@ -2,6 +2,8 @@
 #include "LidarXV11.h"
 #include "Essai_Lidar.h"
 
+//Fil orange = Tx à branacher sur un Rx de Teensy
+
 LidarXV11 lidar;
 
 void setup() {

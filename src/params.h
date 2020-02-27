@@ -60,9 +60,9 @@ const int DYNAMIXEL_CONTROL = 30;
 const int DYNAMIXEL_ID =1;
 
 const int EMERGENCY_BRAKE = 1800;
-const int ACCEL_MAX = 300; //500
+const int ACCEL_MAX = 500;
 const int ACCEL_MAX_THROW = 100;
-const int SPEED_MAX = 350; //350
+const int SPEED_MAX = 350;
 
 const float ACCEL_OMEGA_MAX = 1;
 const float OMEGA_MAX = 1.5;
@@ -75,8 +75,8 @@ const float ADMITTED_ANGLE_ERROR = 0.01;
 
 const float MAX_DRIFT = 0.1;
 
-const float WHEEL_DIAMETER = 56.7;
-const float WHEELBASE = 190; //189.1714;
+const float WHEEL_DIAMETER = 54.0;
+const float WHEELBASE = 230.0;
 
 const float INCR_TO_MM = PI*WHEEL_DIAMETER/805.12;
 

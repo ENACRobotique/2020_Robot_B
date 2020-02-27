@@ -5,8 +5,8 @@
  *      Author: elie
  */
 
-#ifndef ODOMETRY_H_
-#define ODOMETRY_H_
+#ifndef posEstimator_H_
+#define posEstimator_H_
 
 namespace PosEstimator
 {

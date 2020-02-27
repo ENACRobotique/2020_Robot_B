@@ -36,6 +36,13 @@ const int MOT1_DIR = 6;
 const int MOT2_PWM = 29;
 const int MOT2_DIR = 28;
 
+// Constantes sonometrie
+const int SONO_TRIGGER = ;
+const int SONO_ECHO = ;
+const unsigned long MEASURE_TIMEOUT = 25000UL; //Microseconds
+const float SOUND_SPEED = 342.0;
+const unsigned long CONVERT = 1000000;
+
 const int BATT_CHARGE = 37;
 
 const int US_RANGE = 35;

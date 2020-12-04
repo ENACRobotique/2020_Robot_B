@@ -116,7 +116,7 @@ void LidarXV11::update(uint8_t byte) {
 		state = WAIT_START;
 		break;
 	default:
-		Serial.println("AAAAAAH");
+		Serial.println("No state");
 		break;
 	}
 	if (ck % 2 == 0){

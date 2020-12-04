@@ -41,9 +41,13 @@ const int BATT_CHARGE = 37;
 const int US_RANGE = 35;
 const int US_RANGE_DIMINUSHED = 25;
 
-const int SERVO1 = 39;
-const int SERVO2 = 15;
-const int SERVO3 = 37;
+//Servo Moteur
+const int SERVO_BRAS_PRINCIPAL = 39;
+const int SERVO_BRAS_SECONDAIRE = 15;
+const int SERVO_PINCE_SUPERIEURE = 37;
+const int SERVO_PINCE_INFERIEURE;
+const int SERVO_MANCHE_AIR;
+const int SERVO_FLAG;
 
 const int MOT_GALET_L = 35;
 const int MOT_LIDAR = 35;
